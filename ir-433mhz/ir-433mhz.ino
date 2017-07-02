@@ -101,6 +101,7 @@ void encoding(decode_results *results) {
 //
 void dumpCode(decode_results *results) {
   // Start declaration
+  Serial.println("dumpcode received");
   Serial.print("uint16_t  ");              // variable type
   Serial.print("rawData[");                // array name
   Serial.print(results->rawlen - 1, DEC);  // array size
@@ -146,50 +147,6 @@ void dumpCode(decode_results *results) {
     Serial.println(";");
   }
 }
-
-
-
-String bin2hex(unsigned int code){
-  
-//  int base=16;
-//  char buf[8 * sizeof(code) + 1];  // Assumes 8-bit chars plus zero byte.
-//  char *str = &buf[sizeof(buf) - 1];
-//
-//  *str = '\0';
-//
-//  do {
-//    char c = code % base;
-//    code /= base;
-//
-//    *--str = c < 10 ? c + '0' : c + 'A' - 10;
-//
-//    
-//  } while (code);
-//
-//  return String(str);
-
-return String(code, HEX);
-  
-}
-
-long hex2bin(String code){
-//char stringchar;
-//long value=0;
-//
-//for(int itr=0;itr<hexchar.length();itr++){
-//   stringchar=hexchar.charAt(itr);
-//   value+= stringchar<10? stringchar*2^(8*itr):(stringchar-'A')*2^(8*itr);//MAL
-//  }
-//
-
-//String hexchar="0x"+code;
-Serial.println("parse hex");
-Serial.println(code);
-//return strtol(hexchar.c_str(),NULL,16);
-return strtol(code.c_str(),NULL,16);
-}
-
-
 
 
 void sendMQTTIR(decode_results *results){
@@ -306,34 +263,19 @@ void callbackMQTT(char* topic_mqtt, byte* payload, unsigned int length) {
           Serial.println(String((const char*) root["code"]));
           Serial.println(String((const char*) root["bits"]));
           String hexcodeIR=String((const char*) root["code"]);
-          //char hexcodeIRb[hexcodeIR.length()];
-          //int itr=0;
-          //for( itr=0;itr<hexcodeIR.length();itr++){
-          //  hexcodeIRb[itr]=hexcodeIR.charAt(itr);
-          //}
-          //hexcodeIRb[itr]='\0';
-          //char joderya[256];
           
           Serial.println(hexcodeIR);
           Serial.println("---");
-        
-          //codeIR=hexvalue.toInt();
-          //Serial.println(strtol((char*)codeIR.c_str(),0,16));
           
           
           bitsIR=String((const char*) root["bits"]).toInt();
           Serial.print("code dec: ");
-          //codeIR=strtol(hexcodeIR.c_str(),NULL,16);
           codeIR=strtoul(hexcodeIR.c_str(),NULL,16);
-          //sprintf(joderya,"%l",codeIR);
-
-          //Serial.print("Hexadecimal: ");
-          //Serial.print((long unsigned int)joderya, HEX);
-          Serial.println("\n-------------------------");
           Serial.println(codeIR,DEC);
           Serial.println(codeIR,HEX);
           Serial.print("bits: ");
           Serial.println(bitsIR);
+          Serial.println("end sending");
           sendIR(codeIR,bitsIR);
       }
     }
