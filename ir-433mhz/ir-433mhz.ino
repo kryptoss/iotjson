@@ -13,7 +13,7 @@
 #define mqtt_server "192.168.1.142"
 
 
-#define pinLedIR 16
+#define pinLedIR 12
 #define pinPhotoIR 14
 #define pinSender433 4
 #define pinReceiver433 5
@@ -148,24 +148,27 @@ void dumpCode(decode_results *results) {
 }
 
 
-String bin2hex(uint64_t code){
+
+String bin2hex(unsigned int code){
   
-  int base=16;
-  char buf[8 * sizeof(code) + 1];  // Assumes 8-bit chars plus zero byte.
-  char *str = &buf[sizeof(buf) - 1];
+//  int base=16;
+//  char buf[8 * sizeof(code) + 1];  // Assumes 8-bit chars plus zero byte.
+//  char *str = &buf[sizeof(buf) - 1];
+//
+//  *str = '\0';
+//
+//  do {
+//    char c = code % base;
+//    code /= base;
+//
+//    *--str = c < 10 ? c + '0' : c + 'A' - 10;
+//
+//    
+//  } while (code);
+//
+//  return String(str);
 
-  *str = '\0';
-
-  do {
-    char c = code % base;
-    code /= base;
-
-    *--str = c < 10 ? c + '0' : c + 'A' - 10;
-
-    
-  } while (code);
-
-  return String(str);
+return String(code, HEX);
   
 }
 
@@ -193,7 +196,8 @@ void sendMQTTIR(decode_results *results){
   
   rootAnswer["id"] = idIR;
   rootAnswer["bits"] = String((int)results->bits);
-  rootAnswer["code"] = bin2hex(results->value);
+  //rootAnswer["code"] = bin2hex(results->value); 
+  rootAnswer["code"] = String((unsigned int)results->value,16);
   
   Serial.println("Received IR");
   Serial.println("code: " + String((const char*) rootAnswer["code"]));
@@ -302,13 +306,13 @@ void callbackMQTT(char* topic_mqtt, byte* payload, unsigned int length) {
           Serial.println(String((const char*) root["code"]));
           Serial.println(String((const char*) root["bits"]));
           String hexcodeIR=String((const char*) root["code"]);
-          char hexcodeIRb[hexcodeIR.length()];
-          int itr=0;
-          for( itr=0;itr<hexcodeIR.length();itr++){
-            hexcodeIRb[itr]=hexcodeIR.charAt(itr);
-          }
-          hexcodeIRb[itr]='\0';
-          char joderya[256];
+          //char hexcodeIRb[hexcodeIR.length()];
+          //int itr=0;
+          //for( itr=0;itr<hexcodeIR.length();itr++){
+          //  hexcodeIRb[itr]=hexcodeIR.charAt(itr);
+          //}
+          //hexcodeIRb[itr]='\0';
+          //char joderya[256];
           
           Serial.println(hexcodeIR);
           Serial.println("---");
@@ -320,11 +324,11 @@ void callbackMQTT(char* topic_mqtt, byte* payload, unsigned int length) {
           bitsIR=String((const char*) root["bits"]).toInt();
           Serial.print("code dec: ");
           //codeIR=strtol(hexcodeIR.c_str(),NULL,16);
-          codeIR=strtoul(hexcodeIRb,NULL,16);
-          sprintf(joderya,"%l",codeIR);
+          codeIR=strtoul(hexcodeIR.c_str(),NULL,16);
+          //sprintf(joderya,"%l",codeIR);
 
-          Serial.print("Hexadecimal: ");
-          Serial.print((long unsigned int)joderya, HEX);
+          //Serial.print("Hexadecimal: ");
+          //Serial.print((long unsigned int)joderya, HEX);
           Serial.println("\n-------------------------");
           Serial.println(codeIR,DEC);
           Serial.println(codeIR,HEX);
