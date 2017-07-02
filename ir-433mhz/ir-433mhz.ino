@@ -30,7 +30,8 @@ int loopDelay=250;
 
 String onString = "on";
 String offString = "off";
-
+#define answerBufferSize 200
+char answerBuffer[answerBufferSize];
 
 
 
@@ -39,10 +40,16 @@ String offString = "off";
 
 DynamicJsonBuffer jsonBuffer;
 StaticJsonBuffer<200> jsonBufferAnswer;
-JsonObject& rootAnswer = jsonBufferAnswer.createObject();
+//JsonObject& rootAnswer = jsonBufferAnswer.createObject();
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+
+
+
+
+
+
 
 
 #ifdef CAPABLEIR
@@ -56,7 +63,7 @@ PubSubClient client(espClient);
 
 String idIR = "ir-1";
 unsigned long codeIR=0;
-int bitsIR=0;
+unsigned int bitsIR=0;
 
 
 IRrecv irrecv(pinPhotoIR);
@@ -150,7 +157,7 @@ void dumpCode(decode_results *results) {
 
 
 void sendMQTTIR(decode_results *results){
-  
+  JsonObject& rootAnswer = jsonBufferAnswer.createObject();
   rootAnswer["id"] = idIR;
   rootAnswer["bits"] = String((int)results->bits);
   //rootAnswer["code"] = bin2hex(results->value); 
@@ -162,7 +169,8 @@ void sendMQTTIR(decode_results *results){
  char answer[200];
  rootAnswer.printTo(answer);
  client.publish(topicReceivedIR, answer);
-
+ cleanAnswerBuffer();
+ jsonBufferAnswer.clear();
 }
 
 
@@ -178,8 +186,8 @@ void sendMQTTIR(decode_results *results){
 #include <RCSwitch.h>
 
 String id433 = "433-1";
-int code433=0;
-int bits433=0;
+unsigned int code433=0;
+unsigned int bits433=0;
 RCSwitch mySwitch = RCSwitch();
 
 void send433(int code, int bits){
@@ -187,20 +195,27 @@ void send433(int code, int bits){
     mySwitch.send(code,bits);
 }
 
-void sendMQTT433(int code, int bits){
+void sendMQTT433(unsigned int code, unsigned int bits){
+  JsonObject& rootAnswer = jsonBufferAnswer.createObject();
+  rootAnswer["id"] = id433;
   
-    rootAnswer["id"] = id433;
+  rootAnswer["code"] = String(code);
+  rootAnswer["bits"] = String(bits);
   
-  rootAnswer["code"] = String(bits);
-  rootAnswer["bits"] = String(code);
-  
-  Serial.println("Received 433");
+  Serial.println("Send 433");
+  Serial.print("rawcode: ");
+  Serial.println(code);
+  Serial.print("String code: ");
+  Serial.println(String(code));
+  Serial.print("bits: ");
+  Serial.println(bits);
   Serial.println("code: " + String((const char*) rootAnswer["code"]));
   Serial.println("bits: " + String((const char*)  rootAnswer["bits"]));
  char answer[200];
  rootAnswer.printTo(answer);
  client.publish(topicReceived433, answer);
-
+ cleanAnswerBuffer();
+ jsonBufferAnswer.clear();
 }
 
 #endif
@@ -289,7 +304,7 @@ void callbackMQTT(char* topic_mqtt, byte* payload, unsigned int length) {
         Serial.println("Id 433 ok");
         if (String((const char*) root["code"])!="0") {//this only try if it exists, otherway it reboots
             code433=String((const char*) root["code"]).toInt();
-            bits433=String((const char*) root["code"]).toInt();
+            bits433=String((const char*) root["bits"]).toInt();
             Serial.print("code: ");
             Serial.print(code433);
             Serial.print(", bits: ");
@@ -403,14 +418,16 @@ void loop() {
     if (value == 0) {
       Serial.print("Unknown encoding");
     } else {
-      Serial.print("Received ");
-      Serial.print( mySwitch.getReceivedValue() );
+      Serial.print("Received 433");
+      code433= mySwitch.getReceivedValue(); 
+      Serial.print(code433);
       Serial.print(" / ");
-      Serial.print( mySwitch.getReceivedBitlength() );
+      bits433=mySwitch.getReceivedBitlength();
+      Serial.println(bits433);
       Serial.print("bit ");
       Serial.print("Protocol: ");
       Serial.println( mySwitch.getReceivedProtocol() );
-      sendMQTT433(mySwitch.getReceivedValue(),mySwitch.getReceivedBitlength()); 
+      sendMQTT433(code433,bits433); 
     }
 
     mySwitch.resetAvailable();
@@ -422,5 +439,12 @@ void loop() {
   delay(loopDelay);
   
     
+}
+
+void cleanAnswerBuffer(){
+   for(int itr=0; itr<answerBufferSize; itr++){
+    answerBuffer[itr]=0;
+    
+    }
 }
 
