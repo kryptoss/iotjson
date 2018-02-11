@@ -12,7 +12,7 @@ It is based on the following arduino libraries:
 Usage:
 
  * You should create a wifi_conf.c file with your wifi essid and password, like showed in file beginning.
- * You should define where is your mqtt broker, like mosquitto, as it is shown in the beginning of the file.
+ * You should define where is your mqtt broker, like mosquitto, as it is shown in the beginning of the file. By default, MQTT broker is wifi gateway.
  * Flash your device using an arduino like toolkit and the previous libraries.
 
  * You can receive the code of your remotes subscribing to topic "receivedIR" or "received433".
