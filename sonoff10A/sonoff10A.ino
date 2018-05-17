@@ -237,6 +237,8 @@ void loop() {
   
   //connect GPIO16 pin to RST pin
  // ESP.deepSleep(sleepDelay);
+
+ delay(5000);//delay 5 segs
   
     
 }
